@@ -11,6 +11,7 @@ func main() {
 
 	app.Name = "Auto Slice of Life"
 	app.Usage = "Generates Slice of Life pictures from security cameras"
+	app.Version = "0.0.1"
 
 	app.Commands = []cli.Command{
 		{
@@ -26,10 +27,12 @@ func main() {
 					Name:  "user",
 					Usage: "The username to provide to the UBNT camera",
 					Value: "ubnt",
+					EnvVar: "CAMERA_USER",
 				},
 				cli.StringFlag{
 					Name:  "pass",
 					Usage: "The password to access the camera",
+					EnvVar: "CAMERA_PASS",
 				},
 				cli.IntFlag{
 					Name:  "interval",
@@ -38,6 +41,10 @@ func main() {
 				cli.StringFlag{
 					Name:  "start",
 					Usage: "A time string to start capturing at in 24 hour time, e.g. 13:00:00",
+				},
+				cli.StringFlag{
+					Name:  "prefix",
+					Usage: "a folder to place all the images in",
 				},
 			},
 		},
@@ -50,6 +57,14 @@ func main() {
 					Name:  "dir",
 					Usage: "The directory to look for images in",
 					Value: ".",
+				},
+				cli.BoolTFlag{
+					Name: "vertical",
+					Usage: "Compose the slice of life image with vertical slices from each image",
+				},
+				cli.BoolFlag{
+					Name: "horizontal",
+					Usage: "Compose the slice of life image with horizontal slices from each image",
 				},
 			},
 		},

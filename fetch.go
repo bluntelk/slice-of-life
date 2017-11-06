@@ -9,9 +9,10 @@ import (
 	"encoding/json"
 	"net/url"
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"errors"
+	"path/filepath"
+	"os"
 )
 
 func newClient(host, user, pass string) *http.Client {
@@ -45,9 +46,6 @@ func newClient(host, user, pass string) *http.Client {
 	if 200 != result.StatusCode {
 		log.Fatalf("Cannot log into camera %s with user/pass %s/%s. %s\n", loginUrl.String(), user, pass, result.Status)
 	}
-	for _, cookie := range jar.Cookies(&loginUrl) {
-		fmt.Printf("  %s: %s\n", cookie.Name, cookie.Value)
-	}
 
 	return r
 }
@@ -59,6 +57,17 @@ func FetchAction(c *cli.Context) error {
 	host := c.String("host")
 	user := c.String("user")
 	pass := c.String("pass")
+
+	directory, err := filepath.Abs(c.String("prefix"))
+	if err != nil {
+		return err
+	}
+	if err := os.Mkdir(directory, 0775); nil != err {
+		if !os.IsExist(err) {
+			return err
+		}
+	}
+
 	if 0 >= interval {
 		return errors.New("invalid interval, Please enter a positive number")
 	}
@@ -85,14 +94,22 @@ func FetchAction(c *cli.Context) error {
 			client = nil
 			return
 		}
+		dateFolder := directory + dt.Format("/2006-01-02/")
+		if err := os.Mkdir(dateFolder, 0775); nil != err {
+			if !os.IsExist(err) {
+				log.Fatalln("Cannot create folder", dateFolder, err)
+			}
+		}
 
-		filename := "photo_" + dt.Format(time.RFC3339) + ".jpeg"
+		filename := dateFolder + dt.Format("15_04_05") + ".jpeg"
 		image, err := ioutil.ReadAll(r.Body)
 		if nil != err {
 			log.Println(err)
 			return
 		}
-		ioutil.WriteFile(filename, image, 0644)
+		if err := ioutil.WriteFile(filename, image, 0644); err != nil {
+			log.Println(err)
+		}
 		log.Printf("Wrote to file %s with %d bytes", filename, len(image))
 	}
 	timerDuration := time.Duration(interval) * time.Second
