@@ -6,12 +6,21 @@ import (
 	"log"
 )
 
+var debug = false
+
 func main() {
 	app := cli.NewApp()
 
 	app.Name = "Auto Slice of Life"
 	app.Usage = "Generates Slice of Life pictures from security cameras"
 	app.Version = "0.0.1"
+
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name: "debug",
+			Usage:"Show Debugging Information",
+		},
+	}
 
 	app.Commands = []cli.Command{
 		{
@@ -66,8 +75,19 @@ func main() {
 					Name: "horizontal",
 					Usage: "Compose the slice of life image with horizontal slices from each image",
 				},
+				cli.StringFlag{
+					Name:  "prefix",
+					Usage: "a filename prefix for your generated image",
+				},
 			},
 		},
+	}
+	app.Before = func(c *cli.Context) error {
+		debug = c.GlobalBool("debug")
+		if debug {
+			log.Println("Debug Enabled")
+		}
+		return nil
 	}
 
 	err := app.Run(os.Args)
